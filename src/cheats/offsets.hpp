@@ -19,22 +19,22 @@ namespace apex::cheats
         std::uintptr_t timescale;
         std::uintptr_t name_list;
         std::uintptr_t global_vars;
-        uint32_t team = 0x0430;
-        uint32_t health = 0x0420;
-        uint32_t max_health = 0x558;
-        uint32_t bleedout = 0x2628;
+        uint32_t team = 0x0448;
+        uint32_t health = 0x0438; // [RecvTable.DT_Player] m_iHealth
+        uint32_t max_health = 0x0578; //[RecvTable.DT_Player] m_iMaxHealth
+        uint32_t bleedout = 0x2720;
 
-        uint32_t camera = 0x1e6c;
-        uint32_t local_angles = 0x24a0;
+        uint32_t camera = 0x1f40;
+        uint32_t local_angles = 0x1f4c;
         uint32_t breath = local_angles - 0x10;
-        uint32_t origin = 0x14c;
+        uint32_t origin = 0x1f40;
 
-        uint32_t is_zooming = 0x1b81;
-        uint32_t sign_on_state = 0x98;
+        uint32_t is_zooming = 0x1c51; // [RecvTable.DT_Player] m_bZooming
+        uint32_t sign_on_state = 0x98; 
         uint32_t level_name_short_offset = 0x1b0;
 
-        uint32_t latest_primary_weapon = 0x1a0c;
-        uint32_t latest_non_offhand_weapon = 0x1a0c;
+        uint32_t latest_primary_weapon = 0x1a6c;
+        uint32_t latest_non_offhand_weapon = 0x1a6c;
 
         uint32_t entity_bones = 0xf18;
         uint32_t collision = 0x0498;
@@ -46,20 +46,20 @@ namespace apex::cheats
 
         uint32_t head_component = 0x3F04;
         uint32_t eye_pos = 0x3F04;
-        uint32_t velocity = 0x140 /*0x41C*/;
-        uint32_t signifier_name_ptr = 0x560;
+        uint32_t velocity = 0x0428; // [RecvTable.DT_LocalPlayerExclusive] m_vecBaseVelocity
+        uint32_t signifier_name_ptr = 0x0580;
 
         uint32_t recoil = 0x23c8;
         uint32_t sway = local_angles - 0x10;
-        uint32_t duckstate = 0x287c;
-        uint32_t fflags = 0x0098;
-        uint32_t jump_state = 0x40df018 + 0x8; // kbutton_t::state
-        uint32_t studiohdr = 0x1110;
-        uint32_t custom_script_int = 0x1608;
-        uint32_t shield_health = 0x0170;
-        uint32_t weapon_name_index = 0x17b8;
-        uint32_t shield_health_max = 0x0174;
-        uint32_t player_name = 0x3cb8;
+        // uint32_t duckstate = 0x287c;
+        uint32_t fflags = 0x0098; // [RecvTable.DT_Player] m_fFlags
+        uint32_t jump_state = 0x07544298 + 0x8; // kbutton_t::state
+        uint32_t studiohdr = 0x1150;
+        uint32_t custom_script_int = 0x16a8;
+        uint32_t weapon_name_index = 0x16b4; // [RecvTable.DT_PropSurvival] m_weaponNameIndex
+        uint32_t shield_health = 0x0170; // [RecvTable.DT_BaseEntity] m_shieldHealth
+        uint32_t shield_health_max = 0x0174; // [RecvTable.DT_BaseEntity] m_shieldHealthMax
+        uint32_t player_name = 0x0589; // [RecvTable.DT_BaseEntity] m_iName
         std::uintptr_t gafAsyncKeyState;
     };
 }
