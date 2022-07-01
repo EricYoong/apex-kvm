@@ -5,7 +5,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/release)
 
 # add compiler arguments
-add_compile_options(-std=c++20 -Wall -Wextra)
+add_compile_options(-std=c++2a -Wall -Wextra)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
@@ -21,10 +21,10 @@ add_executable(lotusc ${sources})
 # link dependencies and fix include path
 set(MEMFLOW_DIR "${CMAKE_SOURCE_DIR}/deps/memflow")
 target_link_libraries(lotusc 
-    debug "${MEMFLOW_DIR}/target/debug/libmemflow_win32_ffi.a"
     debug "${MEMFLOW_DIR}/target/debug/libmemflow_ffi.a"
-    optimized "${MEMFLOW_DIR}/target/release/libmemflow_win32_ffi.a"
+    debug "${MEMFLOW_DIR}/target/debug/libmemflow_win32_ffi.a"
     optimized "${MEMFLOW_DIR}/target/release/libmemflow_ffi.a"
+    optimized "${MEMFLOW_DIR}/target/release/libmemflow_win32_ffi.a"
     spdlog::spdlog
     cereal
     ${CMAKE_THREAD_LIBS_INIT}

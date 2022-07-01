@@ -3,6 +3,7 @@
 #include "cheats/offsets.hpp"
 #include <memory>
 #include <map>
+#include <spdlog/spdlog.h>
 
 using namespace apex::math;
 using namespace apex::sdk;
@@ -35,7 +36,7 @@ void apex::sdk::player_t::update()
     m_max = get_from_buf<math::vector3>( data.get(), offsets_t::get().collision + 0x1c );
     m_last_visible_time = get_from_buf<float>( data.get(), offsets_t::get().last_visible_time );
     //m_headpos = get_from_buf<math::vector3>( data.get(), offsets_t::get().head_component );
-    m_weapon_handle = get_from_buf<std::uint32_t>( data.get(), offsets_t::get().latest_primary_weapon );
+    m_weapon_handle = get_from_buf<std::uint64_t>( data.get(), offsets_t::get().latest_primary_weapon );
     m_camera = get_from_buf<math::vector3>( data.get(), offsets_t::get().camera );
     m_breath = get_from_buf<math::qangle>( data.get(), offsets_t::get().breath );
     m_recoil = get_from_buf<math::qangle>( data.get(), offsets_t::get().recoil );
@@ -45,19 +46,49 @@ void apex::sdk::player_t::update()
 
 bool player_t::is_visible()
 {
-    static std::map<int, float> visible_map;
     const auto vis_check = this->get_last_visible_time();
-
+    sdk::CGlobalVars global_var;
+    utils::process::get().read( utils::process::get().base_address() + offsets_t::get().global_vars, global_var );
     // If the player was never visible the value is -1
-    const auto is_vis = ( vis_check >= visible_map[ this->index ] );
-
-    visible_map[ this->index ] = vis_check;
+    const auto is_vis = ( vis_check > 0 && fabsf(vis_check - global_var.curtime) < 0.1f );
+    // spdlog::info( "vis_checkt {}, visible_map: {}", vis_check, visible_map[ this->index ]);
     return is_vis;
+}
+
+int apex::sdk::player_t::bone_by_hit_box(int hit_box)
+{
+	int tmp = 0;
+	uint64_t Model = 0;
+	apex::utils::process::get().read( m_base + offsets_t::get().studiohdr, Model );
+	if (!Model) return -1;
+	
+	uint64_t StudioHdr = 0;
+	apex::utils::process::get().read( Model + 8, StudioHdr );
+	if (!StudioHdr) return -1;
+
+	uint64_t HitBoxArray = 0;
+	apex::utils::process::get().read( StudioHdr+0xB4, tmp );
+	HitBoxArray = StudioHdr + tmp;
+	if (!HitBoxArray) return -1;
+
+	int Bone = 0;
+	apex::utils::process::get().read(HitBoxArray + 8, tmp);
+	apex::utils::process::get().read(HitBoxArray + tmp + (hit_box * 0x2C), Bone);
+	return ((Bone < 0) || (Bone > 255)) ? -1 : Bone;
 }
 
 bool apex::sdk::player_t::is_alive()
 {
     return ( this->get_health() > 0 ) && ( this->get_bleedout_state() == sdk::bleedout_state_t::alive );
+}
+
+uint64_t apex::sdk::player_t::get_weapon()
+{
+    uint64_t WeaponHandle = this->get_primary_weapon_handle();
+    WeaponHandle &= 0xffff;
+    uint64_t weapon = 0;
+    apex::utils::process::get().read(utils::process::get().base_address()  + offsets_t::get().entity_list  + (WeaponHandle << 5), weapon);
+    return weapon;
 }
 
 void apex::sdk::item_t::update()
@@ -169,20 +200,20 @@ void apex::sdk::weapon_t::update()
 
 bool apex::sdk::entity_t::is_player()
 {
-    return ( this->class_id == static_cast<int>( apex::sdk::class_id::CPlayer ) );
+    return (!strcmp(this->class_name, "CPlayer") );
 }
 
 bool entity_t::is_dummy()
 {
-    return ( this->class_id == static_cast<int>( apex::sdk::class_id::Titan_Cockpit ) );
+    return (!strcmp(this->class_name, "Titan_Cockpit") || !strcmp(this->class_name, "CAI_BaseNPC") );
 }
 
 bool apex::sdk::entity_t::is_item()
 {
-    return this->class_id == static_cast<int>( apex::sdk::class_id::CPropSurvival );
+    return (!strcmp(this->class_name, "CPropSurvival") );
 }
 
 bool apex::sdk::entity_t::is_weapon()
 {
-    return this->class_id == static_cast<int>( apex::sdk::class_id::CWeaponX );
+    return (!strcmp(this->class_name, "CWeaponX") );
 }

@@ -33,6 +33,7 @@ namespace apex::sdk
         }
 
         int class_id = -1;
+        char class_name[123];
         int index = -1;
     };
 
@@ -93,9 +94,10 @@ namespace apex::sdk
         auto get_name_ptr() { return this->m_name_ptr; }
         auto is_in_zoom() { return this->m_in_zoom; }
         auto get_last_visible_time() { return this->m_last_visible_time; }
-
+        int bone_by_hit_box(int);
         bool is_visible();
         bool is_alive();
+        uint64_t get_weapon();
 
         std::int32_t priority;
 
@@ -111,7 +113,7 @@ namespace apex::sdk
         std::int32_t m_max_shield_health;
         std::int32_t m_flags;
         std::int32_t m_max_health;
-        std::uint32_t m_weapon_handle;
+        std::uint64_t m_weapon_handle;
         sdk::bleedout_state_t m_bleedout_state;
 
         math::qangle m_angles;

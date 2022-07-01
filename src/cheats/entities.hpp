@@ -30,7 +30,7 @@ namespace apex::cheats
         auto cend() const noexcept { return m_entity_list.cend(); }
 
     private:
-        std::int16_t m_local_player_index;
+        std::uint16_t m_local_player_index;
 
         std::vector<sdk::entity_t *> m_entity_list;
         std::vector<sdk::ent_info_t> m_ent_info;

@@ -65,6 +65,10 @@ namespace apex::math
 
         float length_2d() const { return std::sqrt( ( x() * x() ) + ( y() * y() ) ); }
         float length_2d_sqr() const { return x() * x() + y() * y(); }
+        inline static float distance(vector3 lhs, vector3 rhs) {
+            vector3 delta = vector3{rhs.x() - lhs.x(), rhs.y() - lhs.y(), rhs.z() - lhs.z()};
+            return sqrt(delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z());
+        }
     };
 
     class vector4 : public base_array<vector4, float, 4>

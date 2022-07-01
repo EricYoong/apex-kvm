@@ -62,10 +62,10 @@
 
             <br>
             <input type="checkbox" id="aimbotSmooth" name="aimbotSmooth"
-                onchange="changed('checkbox', 'aimbot.smooth', this.checked)">
+                onchange="changed('checkbox', 'aimbot.smooth_enabled', this.checked)">
             <label for="aimbotSmooth">smooth</label><br>
 
-            <input type="range" id="aimbotSmoothFactor" name="aimbotSmoothFactor" min="1" max="100"
+            <input type="range" id="aimbotSmoothFactor" name="aimbotSmoothFactor" min="1" max="3" step="0.1"
                 onchange="changed('value', 'aimbot.smooth_factor', this.value)"
                 oninput="(smoothFactorNr.value=this.value)">
             <label for="aimbotSmoothLabel">smooth factor</label>
@@ -192,14 +192,14 @@
             }
 
             var hitboxes = {
-                o1: { value: 10, text: "head" },
-                o2: { value: 9, text: "upper neck" },
-                o3: { value: 8, text: "neck" },
-                o4: { value: 7, text: "spine c" },
-                o5: { value: 6, text: "spine b" },
+                o1: { value: 0, text: "head" },
+                o2: { value: 1, text: "upper neck" },
+                o3: { value: 2, text: "neck" },
+                o4: { value: 3, text: "spine c" },
+                o5: { value: 4, text: "spine b" },
                 o6: { value: 5, text: "spine a" },
-                o7: { value: 14, text: "left shoulder" },
-                o8: { value: 39, text: "right shoulder" },
+                o7: { value: 6, text: "left shoulder" },
+                o8: { value: 7, text: "right shoulder" },
             }
 
             $.each(keys, function (i, item) {
@@ -222,13 +222,14 @@
             loadElements(1);
         }
 
-        var targetIp = "http://192.168.1.200:2222"
+        var targetIp = "http://192.168.101.5:2222"
 
         function loadElements(tabIndex) {
             var byId = function (id) { return document.getElementById(id); };
             if (tabIndex == 1) {
                 $.getJSON(`${targetIp}/settings`, function (json) {
                     let config = json.config
+                    console.log(config)
                     byId('aimbotEnabled').checked = config.aimbot.enabled
                     byId('aimbotSmooth').checked = config.aimbot.smooth_enabled
 
@@ -247,7 +248,7 @@
                     byId('aimbotOnFriends').checked = config.aimbot.aim_on_friends
                     byId('aimbotVisCheck').checked = config.aimbot.vis_check
                     byId('aimbotRandomAimSpot').checked = config.aimbot.random_aim_spot
-                    byId('aimbotOnDummies').checked = false
+                    byId('aimbotOnDummies').checked = config.aimbot.aim_on_dummies
                     byId('aimbotKey').value = config.aimbot.key
                     byId('aimbotPrimaryHitbox').value = config.aimbot.primary_hitbox
                     byId('aimbotSecondaryHitboxKey').value = config.aimbot.secondary_hitbox_key

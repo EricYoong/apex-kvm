@@ -34,7 +34,7 @@ namespace apex
             bool compensate_recoil( math::qangle &angles );
 
             bool smooth( math::qangle &angles );
-
+            float get_fov_scale();
             void aim_at( sdk::entity_t *entity );
 
             float smooth_x, smooth_y;

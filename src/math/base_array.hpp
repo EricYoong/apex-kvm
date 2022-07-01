@@ -64,7 +64,7 @@ namespace apex::math
             } );
         }
         constexpr VectorType length() const { return std::sqrt( length_sqr() ); }
-        constexpr VectorType distance_from( const DerivedClass &rhs ) const { return ( *this - rhs ).length(); }
+        constexpr VectorType distance_from( const DerivedClass &rhs ) const { return ( rhs - *this ).length(); }
         constexpr bool is_zero() const
         {
             return std::all_of( cbegin(), cend(), []( VectorType x ) {

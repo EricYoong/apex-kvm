@@ -35,7 +35,11 @@ std::vector<apex::utils::export_data_t> pe_view::exports()
         }
 
         if ( contains_name ) {
-            ans.emplace_back( name, fn_rva );
+            std::string nameStr(name);
+            export_data_t tmp = export_data_t();
+            tmp.name = nameStr;
+            tmp.rva = fn_rva;
+            ans.emplace_back( tmp );
         }
     }
     return ans;

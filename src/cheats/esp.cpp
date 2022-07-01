@@ -1,6 +1,7 @@
 #include "esp.hpp"
 #include <thread>
 #include <chrono>
+#include <spdlog/spdlog.h>
 
 #include "entities.hpp"
 #include "utils/process.hpp"
@@ -12,9 +13,12 @@ void apex::cheats::esp::run()
 {
     while ( true ) {
         std::this_thread::sleep_for( std::chrono::milliseconds( 3 ) );
+
         if ( !utils::process::get().good() || !this->should_iterate() ) {
             continue;
         }
+
+        // spdlog::info( "Process Good" );
 
         if ( !entity_list::get().get_local_player() || ( entity_list::get().get_local_player()->get_pos().z() > 11000.f ) ) {
             continue;
@@ -25,8 +29,9 @@ void apex::cheats::esp::run()
                 continue;
             }
 
-            if ( ( options->visual.glow_esp ) && e->is_player() ) {
+            if ( ( options->visual.glow_esp ) && (e->is_player() || e->is_dummy()) ) {
                 apply_glow( e->as<sdk::player_t>() );
+
             }
 
             if ( ( options->visual.item_esp ) && e->is_item() ) {
@@ -83,20 +88,26 @@ void apex::cheats::esp::apply_glow( sdk::player_t *entity )
     float glow_distance = 5000.f;
     std::array<float, 6> max;
     max.fill( std::numeric_limits<float>::max() );
+	apex::sdk::GlowMode mode = {101, 102, 96, 75};
 
     if ( entity_list::get().validate( entity ) ) {
-        utils::process::get().write( entity->get_base() + 0x360, glow_enabled );
-        utils::process::get().write( entity->get_base() + 0x350, glow_time );
+        utils::process::get().write( entity->get_base() + 0x2C4, mode );
         utils::process::get().write_ptr( entity->get_base() + 0x1D0, col.data(), sizeof( float ) * 3 );
-        utils::process::get().write_ptr( entity->get_base() + 0x310, max.data(), sizeof( float ) * max.size() );
-        utils::process::get().write( entity->get_base() + 0x33c, glow_distance );
+    	
+        float currentEntityTime = 5000.f;
+        utils::process::get().write( entity->get_base() + 0x3A4, currentEntityTime );
+
+        utils::process::get().write( entity->get_base() + 0x3C8, glow_enabled );
+        utils::process::get().write( entity->get_base() + 0x3D0, glow_time );
+        utils::process::get().write_ptr( entity->get_base() + 0x388, max.data(), sizeof( float ) * max.size() );
+        utils::process::get().write( entity->get_base() + 0x3B4, glow_distance );
     }
 }
 void apex::cheats::esp::apply_glow( sdk::item_t *entity )
 {
     if ( entity_list::get().validate( entity ) && !entity->is_glown() ) {
         int enable = 1363184265;
-        utils::process::get().write( entity->get_base() + 0x2a8, enable );
+        utils::process::get().write( entity->get_base() + 0x2c0, enable );
     }
 }
 bool apex::cheats::esp::validate_player( sdk::player_t *player ) const noexcept

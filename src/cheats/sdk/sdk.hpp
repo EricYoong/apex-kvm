@@ -131,7 +131,7 @@ namespace apex::sdk
         CAmbientGeneric = 0x1,
         CTitanSoul = 0x5e,
         CAI_BaseNPC = 0,
-        CPlayer = 0x33,
+        CPlayer = 0xa4,
         CBoneFollower = 0xc,
         CBaseAnimating = 0x2
     };
@@ -307,4 +307,44 @@ namespace apex::sdk
         int checksum;
         char name[ 64 ];
     };
+
+    struct ClientClass {
+        uint64_t pCreateFn;
+        uint64_t pCreateEventFn;
+        uint64_t pNetworkName;
+        uint64_t pRecvTable;
+        uint64_t pNext;
+        uint32_t ClassID;
+        uint32_t ClassSize;
+    };
+
+    struct GlowMode
+    {
+        uint8_t GeneralGlowMode, BorderGlowMode, BorderSize, TransparentLevel;
+    };
+    struct Fade
+    {
+        int a, b;
+        float c, d, e, f;
+    };
+
+    class CGlobalVars
+    {
+    public:
+        double realtime;
+        int32_t framecount; //0x0008
+        float absoluteframetime; //0x000C
+        float curtime; //0x0010
+        float N00000047; //0x0014
+        float N00000018; //0x0018
+        float N0000004A; //0x001C
+        float N00000019; //0x0020
+        float N0000004D; //0x0024
+        float N0000001A; //0x0028
+        char pad_002C[4]; //0x002C
+        float N0000001B; //0x0030
+        char pad_0034[12]; //0x0034
+        int32_t tickCount; //0x0040
+        float intervalPerTick; //0x0044
+    }; //Size: 0x0048
 }

@@ -5,6 +5,7 @@
 #include "entities.hpp"
 #include "offsets.hpp"
 
+#include <spdlog/spdlog.h>
 #include <thread>
 #include <map>
 
@@ -74,9 +75,11 @@ apex::sdk::entity_t *aim::get_best_entity()
     auto local_player = entity_list::get().get_local_player();
     auto smallest_unit = use_distance ? std::numeric_limits<float>::max() : options->aimbot.fov;
     auto ans = static_cast<sdk::entity_t *>( nullptr );
+    // spdlog::info( "use_distance: {}, options->aimbot.target_lock: {}, ( this->m_target_index != 0 ): {}", use_distance, options->aimbot.target_lock, ( this->m_target_index != 0 )  );
 
     if ( options->aimbot.target_lock && !use_distance && ( this->m_target_index != 0 ) ) {
         auto target = entity_list::get().at( this->m_target_index );
+            // spdlog::info( "same target" );
 
         // as long as the same target is valid keep at it
         if ( validate_entity( target ) ) {
@@ -90,6 +93,7 @@ apex::sdk::entity_t *aim::get_best_entity()
         }
 
         auto entity_position = this->select_pos( e );
+        // spdlog::info( "entity_position x {}", entity_position.x() );
 
         float current_unit = 0.f;
         if ( use_distance ) {
@@ -98,12 +102,14 @@ apex::sdk::entity_t *aim::get_best_entity()
             current_unit = math::get_fov(
                 local_player->get_angles(),
                 math::vector_angles( local_player->get_pos(), entity_position ) );
+            // spdlog::info( "current_unit {}", current_unit );
+
         }
 
         if ( current_unit >= smallest_unit ) {
             continue;
         }
-
+        // spdlog::info( "smallest unit {}", smallest_unit);
         ans = e;
         smallest_unit = current_unit;
     }
@@ -166,9 +172,7 @@ bool aim::validate_entity( sdk::entity_t *entity ) const noexcept
             return false;
         }
 
-        if ( !player->is_alive() /*||
-            ( player->get_pos().z() > 11000.f ) */
-        ) {
+        if ( !player->is_alive()) {
             return false;
         }
 
@@ -203,41 +207,50 @@ bool aim::validate_entity( sdk::entity_t *entity ) const noexcept
         if ( ( dummy->get_pos().distance_from( local_player->get_pos() ) * 0.01905f ) > options->aimbot.maximum_distance ) {
             return false;
         }
-
+        
         return true;
     }
 
     return false;
 }
+
 apex::math::vector3 aim::select_pos( sdk::entity_t *entity )
 {
     math::vector3 random_factor { rand_aim_x, rand_aim_y, rand_aim_z };
 
-    if ( entity->is_dummy() ) {
-        auto pos = entity->as<sdk::player_t>()->get_pos();
-        pos.z() += 64.f;
+    // if ( entity->is_dummy() ) {
+    //     auto pos = entity->as<sdk::player_t>()->get_pos();
+    //     pos.z() += 64.f;
 
-        if ( options->aimbot.random_aim_spot ) {
-            pos = pos + random_factor;
-        }
+    //     if ( options->aimbot.random_aim_spot ) {
+    //         pos = pos + random_factor;
+    //     }
 
-        return pos;
-    }
+    //     return pos;
+    // }
 
     auto player = entity->as<sdk::player_t>();
-    auto bone_matrix = player->get_bone_matrix();
+    auto bones = player->get_bone_matrix();
 
     auto bone_index = options->aimbot.primary_hitbox;
     if ( utils::is_key_down( static_cast<utils::keycode_t>( options->aimbot.secondary_hitbox_key ) ) ) {
         bone_index = options->aimbot.secondary_hitbox;
     }
 
-    float x = 0.f, y = 0.f, z = 0.f;
-    utils::process::get().read( bone_matrix + 0xcc + static_cast<uintptr_t>( bone_index ) * 0x30, x );
-    utils::process::get().read( bone_matrix + 0xdc + static_cast<uintptr_t>( bone_index ) * 0x30, y );
-    utils::process::get().read( bone_matrix + 0xec + static_cast<uintptr_t>( bone_index ) * 0x30, z );
+    math::vector3 bone_off;
+	int bone = player->bone_by_hit_box(bone_index);
 
-    auto ans = math::vector3 { x, y, z } + player->get_pos();
+	math::matrix3x4 bone_matrix = math::matrix3x4();
+	utils::process::get().read(bones + (bone*sizeof(math::matrix3x4)), bone_matrix);
+	bone_off = math::vector3(bone_matrix[0][3], bone_matrix[1][3], bone_matrix[2][3]);
+
+    // float x = 0.f, y = 0.f, z = 0.f;
+    // utils::process::get().read( bone_matrix + 0xcc + static_cast<uintptr_t>( bone_index ) * 0x30, x );
+    // utils::process::get().read( bone_matrix + 0xdc + static_cast<uintptr_t>( bone_index ) * 0x30, y );
+    // utils::process::get().read( bone_matrix + 0xec + static_cast<uintptr_t>( bone_index ) * 0x30, z );
+    // if ( bone_off.is_zero() ) return math::vector3 {0};
+
+    auto ans = bone_off + player->get_pos();
     if ( options->aimbot.random_aim_spot ) {
         ans = ans + random_factor;
     }
@@ -302,21 +315,50 @@ void aim::reset_state()
     }
 }
 
+float aim::get_fov_scale() {
+	if (entity_list::get().get_local_player()->is_in_zoom()) {
+        auto weapon_handle = entity_list::get().get_local_player()->get_primary_weapon_handle();
+        if ( !weapon_handle || ( weapon_handle == static_cast<std::uint32_t>( -1 ) ) ) {
+            return 1.0f;
+        }
+
+		if (const auto weapon = static_cast<sdk::weapon_t *>( entity_list::get().at( weapon_handle & 0xffff ) )) {
+			if (weapon->get_target_zoom_fov() != 0.0f && weapon->get_target_zoom_fov() != 1.0f) {
+				return weapon->get_target_zoom_fov() / 90.0f;
+			}
+		}
+	}
+	return 1.0f;
+}
+
 bool aim::smooth( math::qangle &angles )
 {
     auto current_angle = entity_list::get().get_local_player()->get_angles();
 
-    // start at 85% speed and go up to 120% depending on fov
-    float multiplier = std::min( std::max( 1.2f - ( math::get_fov( angles, current_angle ) * 0.8f ), 0.85f ), 1.2f );
+    // // start at 85% speed and go up to 120% depending on fov
+    // float multiplier = std::min( std::max( 1.2f - ( math::get_fov( angles, current_angle ) * 0.8f ), 0.85f ), 1.2f );
 
     auto delta = angles - current_angle;
     delta.clamp();
 
     if ( !delta.is_zero() ) {
-        delta.x() /= std::max( smooth_x * multiplier, 1.5f );
-        delta.y() /= std::max( smooth_y * multiplier, 1.5f );
+        const float fov_scale = get_fov_scale();
+        // Stop aiming when this close to a target to prevent mouse jitter.
+        float fov_min = 0.25f;
+        if (delta.length() < fov_min * fov_scale) {
+            angles = math::qangle(0);
+            return false;
+        }
+        // Magic aim smoothing formula :)
+        const float aim_strength = options->aimbot.smooth_factor;
+        const float speed = logf(aim_strength + delta.length() / (fov_scale * fov_scale) * aim_strength) * aim_strength + aim_strength;
+        delta.x() /= speed;
+        delta.y() /= speed;
+    //     delta.x() /= std::max( smooth_x * multiplier, 1.5f );
+    //     delta.y() /= std::max( smooth_y * multiplier, 1.5f );
     }
 
     angles = current_angle + delta;
+
     return true;
 }

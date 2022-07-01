@@ -9,7 +9,7 @@ void apex::cheats::offsets_t::init()
 
     // 0F 84 ? ? ? ? 49 89 5B 10 0F
     // mov     eax, cs:dword_7FF7E4B8BF5C
-    local_player_index = 0x1dcf5e8;
+    local_player_index = 0x129d758; // LocalEntityHandle
 
     clientstate = 0x137e1c0;
     name_list = 0x84067a0;

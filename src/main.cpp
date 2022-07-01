@@ -220,9 +220,8 @@ int main( int argc, const char **argv )
     sigaction( SIGINT, &sa, nullptr );
 
     auto local_ip = argv[ 1 ];
-    auto qemu_pid = argv[ 2 ];
     auto apex_pid = ( argc == 4 ) ? argv[ 3 ] : nullptr;
-
+    
     uint32_t apex_process_id = 0;
     if ( apex_pid ) {
         std::from_chars( apex_pid, apex_pid + strlen( apex_pid ), apex_process_id );
@@ -232,7 +231,7 @@ int main( int argc, const char **argv )
     log_init( 1 );
 
     apex::utils::owned_resource inv { inventory_try_new(), inventory_free };
-    CloneablePhysicalMemoryObj *conn = inventory_create_connector( inv, "kvm", qemu_pid );
+    CloneablePhysicalMemoryObj *conn = inventory_create_connector( inv, "qemu_procfs", "" );
     if ( !conn ) {
         return 0;
     }
